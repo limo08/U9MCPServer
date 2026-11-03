@@ -115,9 +115,8 @@ pip install u9-mcp
 
 ## 项目地址
 
-- Gitee 镜像（**国内访问最快，推荐**）：https://gitee.com/huangdouu/U9MCP
-- GitHub：https://github.com/limo08/U9MCPServer
-- 官网文档：https://limo08.github.io/U9MCPServer/
+- GitHub：[https://github.com/limo08/U9MCPServer](https://github.com/limo08/U9MCPServer)
+- 官网文档：[https://limo08.github.io/U9MCPServer/](https://github.com/limo08/U9MCPServer)
 - PyPI：https://pypi.org/project/u9-mcp/
 
 欢迎 Star、Issues 和 PR！

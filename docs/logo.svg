@@ -6,8 +6,7 @@
     </linearGradient>
   </defs>
   <rect width="400" height="400" rx="60" fill="url(#bg)"/>
-  <text x="200" y="160" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="white" text-anchor="middle">金</text>
-  <text x="200" y="240" font-family="Arial, sans-serif" font-size="36" fill="white" text-anchor="middle" opacity="0.9">U9</text>
-  <text x="200" y="280" font-family="Arial, sans-serif" font-size="28" fill="white" text-anchor="middle" opacity="0.8">MCP</text>
+  <text x="200" y="160" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="white" text-anchor="middle">U9</text>
+  <text x="200" y="240" font-family="Arial, sans-serif" font-size="36" fill="white" text-anchor="middle" opacity="0.9">MCP</text>
   <rect x="120" y="300" width="160" height="4" rx="2" fill="white" opacity="0.6"/>
 </svg>

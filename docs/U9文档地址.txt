@@ -1,3 +1,1 @@
-https://openapi.open.u9.com/ApiDoc
-https://help.open.u9.com/dokuwiki/doku.php
-https://vip.u9.com/?productId=1&productLineId=1&lang=zh-CN
+https://openapi.yyu9c.com/doc.html#/home

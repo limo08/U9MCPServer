@@ -44,16 +44,17 @@ AI 会自动调用用友 API 完成操作，无需手动登录 ERP 界面。
 
 ## 支持的 AI 客户端
 
-| 客户端 | 支持方式 |
-|--------|---------|
-| [Claude Desktop](https://claude.ai/download) | 原生 MCP |
-| [Cursor](https://cursor.sh/) | 原生 MCP |
-| [Windsurf](https://codeium.com/windsurf) | 原生 MCP |
-| [Cline](https://github.com/cline/cline) | 原生 MCP |
-| [Continue](https://continue.dev/) | 原生 MCP |
-| [Claude Code CLI](https://claude.ai/claude-code) | 原生 MCP |
-| [OpenClaw](https://openclaw.ai/) | 微信/WhatsApp/Telegram 中使用；将本页地址发给 OpenClaw，它会自动完成安装并引导填写用友配置 |
-| 其他 MCP 兼容客户端 | 原生 MCP |
+| 客户端                                           | 支持方式                                                                                   |
+|--------------------------------------------------|--------------------------------------------------------------------------------------------|
+| [Claude Desktop](https://claude.ai/download)     | 原生 MCP                                                                                   |
+| [Cursor](https://cursor.sh/)                     | 原生 MCP                                                                                   |
+| [Windsurf](https://codeium.com/windsurf)         | 原生 MCP                                                                                   |
+| [Cline](https://github.com/cline/cline)          | 原生 MCP                                                                                   |
+| [Continue](https://continue.dev/)                | 原生 MCP                                                                                   |
+| [Claude Code CLI](https://claude.ai/claude-code) | 原生 MCP                                                                                   |
+| [OpenClaw](https://openclaw.ai/)                 | 微信/WhatsApp/Telegram 中使用；将本页地址发给 OpenClaw，它会自动完成安装并引导填写用友配置 |
+| [WorkBuddy](https://www.workbuddy.cn/)           | 原生 MCP                                                                                   |
+| 其他 MCP 兼容客户端                              | 原生 MCP                                                                                   |
 
 ## 功能特性
 
