@@ -1,0 +1,33 @@
+# 用友U9 MCP Server —— 两条命令起服务
+# 第三方开源项目，非用友官方出品。
+#
+#   1) cp .env.example .env     # 然后把 4 个 U9_API_* 填上
+#   2) docker compose up -d
+#
+# 起来之后，MCP 客户端连： http://<宿主机IP>:8000/mcp
+# 看日志： docker compose logs -f
+# 验配置： docker compose run --rm u9-mcp --check
+
+services:
+  u9-mcp:
+    build:
+      context: .
+      args:
+        # 国内构建慢就改成 https://mirrors.aliyun.com/pypi/simple/
+        PIP_INDEX_URL: https://pypi.org/simple
+    image: u9-mcp:local
+    container_name: u9-mcp
+    restart: unless-stopped
+
+    # 用友账号密码等敏感配置放 .env，不要写进本文件（本文件会进 git）
+    env_file:
+      - .env
+
+    environment:
+      # 容器里必须监听 0.0.0.0，否则端口映射了也连不上
+      U9_MCP_TRANSPORT: streamable-http
+      U9_MCP_HOST: 0.0.0.0
+      U9_MCP_PORT: "8000"
+
+    ports:
+      - "8000:8000"

@@ -1,0 +1,266 @@
+#!/usr/bin/env python3
+"""
+kmcp — U9 MCP Dev Squad 配套命令行工具。
+
+子命令：
+  list-tools   统计 u9-mcp 源码里 @mcp.tool 的数量
+  build        调用 `python -m build` 构建 wheel / sdist
+  test         运行 evals/ 与 tests/ 回归（需要 pytest，连真实用友环境）
+  coverage     对照 ApiDoc 接口清单（references/api-inventory-raw.json）输出覆盖进度
+  tools        按关键字查重：扫描 server.py 的 @mcp.tool 名，列出已覆盖的工具
+               （防止专家团重复开发的核心命令）
+
+用法：
+  python bin/kmcp list-tools
+  python bin/kmcp build [--project D:\\AI\\projects\\u9-mcp]
+  python bin/kmcp test  [--project ...]
+  python bin/kmcp coverage [--project ...] [--inventory references/api-inventory-raw.json]
+  python bin/kmcp tools <关键字> [--project ...]
+               例：python bin/kmcp tools purchase
+                   python bin/kmcp tools save
+                   python bin/kmcp tools inventory
+"""
+
+import argparse
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+# 默认 u9-mcp 源码根目录（可经 --project 覆盖）
+DEFAULT_PROJECT = Path(r"D:\AI\projects\u9-mcp")
+SCRIPT_DIR = Path(__file__).resolve().parent
+DEFAULT_INVENTORY = SCRIPT_DIR.parent / "skills" / "u9-mcp-dev" / "references" / "api-inventory-raw.json"
+
+
+def _find_server_py(project: Path):
+    candidates = [
+        project / "src" / "u9_mcp" / "server.py",
+        project / "u9_mcp" / "server.py",
+    ]
+    for c in candidates:
+        if c.exists():
+            return c
+    return None
+
+
+def cmd_list_tools(args):
+    project = args.project
+    server = _find_server_py(project)
+    if not server:
+        print(f"❌ 找不到 server.py，请确认 --project 指向 u9-mcp 源码根目录: {project}")
+        return 1
+    names = _scan_tool_names(server)
+    print(f"📊 {server}")
+    print(f"   已注册 @mcp.tool 数量: {len(names)}（已排除注释行 / 多行装饰器 / name 参数精确计数）")
+    return 0
+
+
+def _scan_tool_names(server: Path):
+    """返回 server.py 里未被注释的 @mcp.tool 装饰工具名列表 [(name, lineno), ...]。
+
+    支持三种写法：
+      @mcp.tool                          # 单行，无参数 → 取函数名
+      @mcp.tool()                        # 带空括号 → 取函数名
+      @mcp.tool(                        # 多行，name="..." → 优先取 name 参数
+          name="u9_xxx",
+          annotations={...})
+      async def u9_xxx(...):
+    已注释掉的行（# @mcp.tool）会被排除。
+    """
+    import re
+    names = []
+    try:
+        lines = server.read_text(encoding="utf-8").splitlines()
+    except Exception as e:
+        print(f"❌ 读取 {server} 失败: {e}")
+        return names
+
+    i = 0
+    n = len(lines)
+    while i < n:
+        line = lines[i]
+        # 仅行首出现 @mcp.tool 且非注释才算装饰器
+        if re.match(r"^@mcp\.tool\b", line) and not line.lstrip().startswith("#"):
+            block = line
+            depth = line.count("(") - line.count(")")
+            j = i + 1
+            # 收集到装饰器闭合 ')' 为止（多行参数块）
+            while j < n and depth > 0:
+                block += "\n" + lines[j]
+                depth += lines[j].count("(") - lines[j].count(")")
+                j += 1
+            after = j  # 装饰器之后的第一行
+            # 优先取装饰器里的 name="..." 参数（真正的注册名）
+            m_name = re.search(r'name\s*=\s*["\']([^"\']+)["\']', block)
+            # 找紧随其后的 def（可 async）
+            func_name = None
+            k = after
+            while k < n:
+                m_def = re.match(r"\s*(?:async\s+)?def\s+(\w+)\s*\(", lines[k])
+                if m_def:
+                    func_name = m_def.group(1)
+                    break
+                if re.match(r"\s*@|\s*class\s+", lines[k]):
+                    break  # 遇到下一个装饰器或 class，放弃
+                k += 1
+            tool_name = m_name.group(1) if m_name else func_name
+            if tool_name:
+                names.append((tool_name, i + 1))
+            i = j  # 跳到装饰器之后继续
+            continue
+        i += 1
+    return names
+
+
+def cmd_tools(args):
+    """按关键字查重：列出已覆盖的 @mcp.tool，立刻判断是否重复开发。"""
+    project = args.project
+    server = _find_server_py(project)
+    if not server:
+        print(f"❌ 找不到 server.py，请确认 --project 指向 u9-mcp 源码根目录: {project}")
+        return 1
+    keyword = args.keyword.strip().lower()
+    if not keyword:
+        print("❌ keyword 不能为空")
+        return 1
+    all_names = _scan_tool_names(server)
+    matches = [(n, ln) for n, ln in all_names if keyword in n.lower()]
+    print(f"🔍 扫描 {server}")
+    print(f"   关键字 '{keyword}' 命中 {len(matches)} / 共 {len(all_names)} 个 @mcp.tool：")
+    print("-" * 60)
+    if matches:
+        for n, ln in sorted(matches, key=lambda x: x[0]):
+            print(f"   • {n:<32} server.py:{ln}")
+    else:
+        print("   （无命中 —— 该语义在 MCP 中尚未实现，可考虑新建工具）")
+    print("-" * 60)
+    print("   判重口诀：同名/同 FormId/同语义 → 复用或扩展现有，勿新建。")
+    return 0
+
+
+def cmd_build(args):
+    project = args.project
+    if not (project / "pyproject.toml").exists():
+        print(f"❌ {project} 下找不到 pyproject.toml，无法构建")
+        return 1
+    print(f"🔨 构建 {project} ...")
+    proc = subprocess.run([sys.executable, "-m", "build"], cwd=str(project))
+    if proc.returncode == 0:
+        dist = project / "dist"
+        files = sorted(dist.glob("*")) if dist.exists() else []
+        print("✅ 构建完成：")
+        for f in files:
+            print(f"   • {f.name}")
+    return proc.returncode
+
+
+def cmd_test(args):
+    project = args.project
+    targets = [project / "evals", project / "tests"]
+    existing = [str(t) for t in targets if t.exists()]
+    if not existing:
+        print(f"❌ 找不到 evals/ 或 tests/ 目录: {project}")
+        return 1
+    # 优先用 pytest
+    try:
+        subprocess.run([sys.executable, "-m", "pytest", "--version"],
+                       capture_output=True, check=True)
+        cmd = [sys.executable, "-m", "pytest", "-q"] + existing
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print("⚠️ 未安装 pytest，回退为逐个 import 执行（无断言汇总）")
+        cmd = [sys.executable, "-c",
+               "import runpy, sys; [runpy.run_path(str(p), run_name='__main__') for p in sys.argv[1:]]"] + \
+              [str(p) for t in targets if t.exists() for p in sorted(t.glob('*.py'))]
+    print(f"🧪 运行回归: {' '.join(existing)}")
+    proc = subprocess.run(cmd, cwd=str(project))
+    return proc.returncode
+
+
+def _count_inventory(inventory: Path):
+    if not inventory.exists():
+        return None
+    data = json.loads(inventory.read_text(encoding="utf-8"))
+    domains = data.get("domains", [])
+    n_domains = len(domains)
+    n_modules = sum(len(d.get("c", [])) for d in domains)
+    # 递归统计操作层（员工服务域已抓全）
+    def count_ops(node):
+        total = 0
+        for child in node.get("c", []):
+            if child.get("c"):
+                total += count_ops(child)
+            else:
+                total += 1
+        return total
+    n_ops = sum(count_ops(d) for d in domains)
+    return {
+        "domains": n_domains,
+        "modules": n_modules,
+        "operations_scraped": n_ops,
+        "source": data.get("source"),
+        "captured_at": data.get("captured_at"),
+        "note": data.get("note"),
+    }
+
+
+def cmd_coverage(args):
+    project = args.project
+    inventory = args.inventory
+    inv = _count_inventory(inventory)
+    server = _find_server_py(project)
+    tool_count = 0
+    if server:
+        tool_count = server.read_text(encoding="utf-8").count("@mcp.tool")
+
+    print("📈 ApiDoc 覆盖进度")
+    print("-" * 52)
+    if inv:
+        print(f"   数据源        : {inv['source']}")
+        print(f"   抓取日期      : {inv['captured_at']}")
+        print(f"   业务领域      : {inv['domains']}")
+        print(f"   模块数        : {inv['modules']}")
+        print(f"   已抓取操作级  : {inv['operations_scraped']}（仅员工服务域完整）")
+    else:
+        print("   ⚠️ 未找到 ApiDoc 接口清单，无法统计覆盖")
+    print(f"   已实现 @mcp.tool: {tool_count}")
+    print("-" * 52)
+    if inv and inv["operations_scraped"]:
+        # 操作级仅员工服务域完整，给出“已知清单”口径的覆盖率（保守提示）
+        print("   说明：操作级清单尚未全量抓取，覆盖率为『已抓取操作』口径。")
+        print("        逐模块补全 ApiDoc 操作级后，coverage 才能给出精确覆盖率。")
+    return 0
+
+
+def main():
+    parser = argparse.ArgumentParser(prog="kmcp", description="U9 MCP Dev Squad CLI")
+    parser.add_argument("--project", type=Path, default=DEFAULT_PROJECT,
+                        help=f"u9-mcp 源码根目录 (默认 {DEFAULT_PROJECT})")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    sub.add_parser("list-tools", help="统计 @mcp.tool 数量")
+    sub.add_parser("build", help="构建 wheel / sdist")
+    sub.add_parser("test", help="运行 evals/tests 回归")
+    p_cov = sub.add_parser("coverage", help="对照 ApiDoc 输出覆盖进度")
+    p_cov.add_argument("--inventory", type=Path, default=DEFAULT_INVENTORY,
+                       help="ApiDoc 接口清单 JSON 路径")
+    p_tools = sub.add_parser("tools", help="按关键字查重：列出已覆盖的 @mcp.tool")
+    p_tools.add_argument("keyword", help="过滤关键字，如 purchase / save / query / inventory")
+
+    args = parser.parse_args()
+
+    if args.command == "list-tools":
+        return cmd_list_tools(args)
+    if args.command == "build":
+        return cmd_build(args)
+    if args.command == "test":
+        return cmd_test(args)
+    if args.command == "coverage":
+        return cmd_coverage(args)
+    if args.command == "tools":
+        return cmd_tools(args)
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

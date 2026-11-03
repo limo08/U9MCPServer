@@ -1,0 +1,45 @@
+{
+  "id": "so_push_delivery_001",
+  "category": "销售订单",
+  "tags": ["下推", "反写"],
+  "input": "把销售订单 SO-2026-001 下推生成发货通知单",
+  "setup": {
+    "description": "确保存在一张已审核、未下推的销售订单 SO-2026-001",
+    "fixtures": []
+  },
+  "expected_result": {
+    "assertions": [
+      {
+        "desc": "下游发货通知单已生成（关联源单 SO-2026-001）",
+        "form_id": "SAL_DELIVERYNOTICE",
+        "filter_string": "FSrcBillNo='SO-2026-001'",
+        "min_count": 1
+      },
+      {
+        "desc": "源销售订单 SO-2026-001 下推数量被正确反写为 100",
+        "form_id": "SAL_SaleOrder",
+        "filter_string": "FBillNo='SO-2026-001'",
+        "exact_count": 1,
+        "field_checks": {"FPushedQty": 100}
+      }
+    ]
+  },
+  "expected_tools": ["u9_query_sale_orders", "u9_push_bill"],
+  "max_steps": 6,
+  "safety": {"require_confirm_over_amount": null},
+  "mock_trajectory": {
+    "tool_calls": [
+      {"name": "u9_query_sale_orders", "arguments": {"filter_string": "FBillNo='SO-2026-001'"}, "result": "{\"count\": 1}"},
+      {"name": "u9_push_bill", "arguments": {"form_id": "SAL_SaleOrder", "target_form_id": "SAL_DELIVERYNOTICE"}, "result": "{\"success\": true, \"next_action\": \"submit+audit\"}"}
+    ],
+    "final_text": "已将销售订单 SO-2026-001 下推生成发货通知单 DN-2026-001。"
+  },
+  "mock_state": {
+    "SAL_DELIVERYNOTICE": [
+      {"FID": 3001, "FBillNo": "DN-2026-001", "FSrcBillNo": "SO-2026-001"}
+    ],
+    "SAL_SaleOrder": [
+      {"FID": 4001, "FBillNo": "SO-2026-001", "FPushedQty": 100}
+    ]
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "name": "u9-mcp-dev",
+  "version": "1.0.0",
+  "description": "U9 OpenAPI (ApiDoc) full-coverage MCP Server development team — WebAPI integration, MCP tool implementation, QA regression and PyPI release.",
+  "author": {
+    "name": "Limo"
+  },
+  "agents": [
+    "./agents/u9-mcp-dev-team-lead.md",
+    "./agents/u9-webapi-engineer.md",
+    "./agents/u9-mcp-tool-dev.md",
+    "./agents/u9-qa-engineer.md",
+    "./agents/u9-doc-release.md"
+  ],
+  "skills": [
+    "./skills/u9-mcp-dev"
+  ],
+  "expertType": "team",
+  "agentName": "u9-mcp-dev-team-lead",
+  "teamInfo": {
+    "leadAgent": "u9-mcp-dev-team-lead",
+    "memberAgents": [
+      "u9-webapi-engineer",
+      "u9-mcp-tool-dev",
+      "u9-qa-engineer",
+      "u9-doc-release"
+    ]
+  },
+  "displayName": {
+    "en": "U9 MCP Dev Squad",
+    "zh": "用友 MCP 开发团"
+  },
+  "profession": {
+    "en": "U9 MCP Dev Squad",
+    "zh": "用友 MCP 开发团"
+  },
+  "displayDescription": {
+    "en": "Builds and maintains the U9 MCP Server: integrates all OpenAPI interfaces from ApiDoc, implements MCP tools, runs QA regression, and publishes to PyPI.",
+    "zh": "专注用友U9 MCP 开发，将 ApiDoc 全量接口纳入 MCP，含接入、工具实现、测试与发布。"
+  },
+  "avatar": "avatars/team.png",
+  "categoryId": "02-Engineering",
+  "defaultInitPrompt": {
+    "zh": "把用友 ApiDoc【供应链→采购管理】的接口集成进 u9-mcp，先探字段再写工具。",
+    "en": "Help me integrate the U9 OpenAPI (ApiDoc) interfaces under Supply Chain > Procurement into u9-mcp — discover fields first, then implement the tool."
+  },
+  "plugin": "u9-mcp-dev",
+  "tags": [
+    { "en": "U9 Cloud", "zh": "用友U9" },
+    { "en": "MCP Dev", "zh": "MCP 开发" },
+    { "en": "OpenAPI Coverage", "zh": "接口全量集成" }
+  ],
+  "quickPrompts": [
+    { "en": "Integrate the ApiDoc interfaces under Supply Chain > Procurement into u9-mcp (discover fields first).", "zh": "把用友 ApiDoc【供应链→采购管理】的接口集成进 u9-mcp，先探字段再写工具。" },
+    { "en": "Run the evals regression to confirm the 89 existing tools are not broken.", "zh": "跑一遍 evals 回归，确认现有 89 个工具没有被破坏。" },
+    { "en": "Prepare the 0.3.0 release: update CHANGELOG, build and upload to PyPI.", "zh": "准备 0.3.0 发布：更新 CHANGELOG、构建并上传 PyPI。" }
+  ],
+  "members": [
+    {
+      "id": "u9-mcp-dev-team-lead",
+      "displayName": { "en": "Gong Lianda", "zh": "龚联达" },
+      "profession": { "en": "Integration Delivery Director", "zh": "集成交付总监" },
+      "avatar": "avatars/u9-mcp-dev-team-lead.png",
+      "role": "lead"
+    },
+    {
+      "id": "u9-webapi-engineer",
+      "displayName": { "en": "Fan Tanyuan", "zh": "范探源" },
+      "profession": { "en": "U9 WebAPI Integration Engineer", "zh": "用友 WebAPI 集成工程师" },
+      "avatar": "avatars/u9-webapi-engineer.png",
+      "role": "member"
+    },
+    {
+      "id": "u9-mcp-tool-dev",
+      "displayName": { "en": "Kou Douma", "zh": "寇豆码" },
+      "profession": { "en": "MCP Tool Developer", "zh": "MCP 工具开发工程师" },
+      "avatar": "avatars/u9-mcp-tool-dev.png",
+      "role": "member"
+    },
+    {
+      "id": "u9-qa-engineer",
+      "displayName": { "en": "Yan Guoguan", "zh": "严过关" },
+      "profession": { "en": "QA & Test Engineer", "zh": "测试与质量工程师" },
+      "avatar": "avatars/u9-qa-engineer.png",
+      "role": "member"
+    },
+    {
+      "id": "u9-doc-release",
+      "displayName": { "en": "Wen Shucheng", "zh": "温书成" },
+      "profession": { "en": "Docs & Release Engineer", "zh": "文档与发布工程师" },
+      "avatar": "avatars/u9-doc-release.png",
+      "role": "member"
+    }
+  ]
+}

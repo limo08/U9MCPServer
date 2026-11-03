@@ -1,0 +1,38 @@
+{
+  "id": "query_material_by_name_002",
+  "category": "查询",
+  "tags": ["高频", "查询", "基础资料"],
+  "input": "帮我查一下名称里带“螺丝”的物料，要编码和名称",
+  "setup": {
+    "description": "确保物料螺丝存在",
+    "fixtures": ["material_luosi"]
+  },
+  "expected_result": {
+    "assertions": [
+      {
+        "desc": "查到名称含“螺丝”的物料至少1条",
+        "form_id": "BD_Material",
+        "filter_string": "FName like '%螺丝%'",
+        "min_count": 1
+      }
+    ]
+  },
+  "expected_tools": ["u9_query_materials"],
+  "max_steps": 3,
+  "safety": {"require_confirm_over_amount": null},
+  "mock_trajectory": {
+    "tool_calls": [
+      {
+        "name": "u9_query_materials",
+        "arguments": {"filter_string": "FName like '%螺丝%'"},
+        "result": "{\"count\": 1}"
+      }
+    ],
+    "final_text": "找到 1 个物料：LS-001 不锈钢螺丝。"
+  },
+  "mock_state": {
+    "BD_Material": [
+      {"FMaterialId": 5001, "FNumber": "LS-001", "FName": "不锈钢螺丝"}
+    ]
+  }
+}

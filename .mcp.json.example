@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "u9": {
+      "command": "uvx",
+      "args": ["u9-mcp"],
+      "env": {
+        "U9_API_SERVER_URL": "https://your-u9c-host:8080",
+        "U9_API_CLIENT_ID": "your-client-id",
+        "U9_API_CLIENT_SECRET": "your-client-secret",
+        "U9_API_ENT_CODE": "your-ent-code",
+        "U9_API_ORG_CODE": "your-org-code",
+        "U9_API_USERNAME": "your-user-code",
+        "U9_API_LANGUAGE": "zh-CN"
+      }
+    }
+  }
+}

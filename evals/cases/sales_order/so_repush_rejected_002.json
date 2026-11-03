@@ -1,0 +1,40 @@
+{
+  "id": "so_repush_rejected_002",
+  "category": "销售订单",
+  "tags": ["边界", "错误场景", "下推"],
+  "input": "把销售订单 SO-2026-002 下推生成发货通知单",
+  "setup": {
+    "description": "SO-2026-002 已全部下推过一次，不应再次下推",
+    "fixtures": []
+  },
+  "expected_result": {
+    "assertions": [
+      {
+        "desc": "不应产生重复的发货通知单，源单仍只有 1 张下游单",
+        "form_id": "SAL_DELIVERYNOTICE",
+        "filter_string": "FSrcBillNo='SO-2026-002'",
+        "exact_count": 1
+      }
+    ]
+  },
+  "expected_tools": ["u9_query_sale_orders"],
+  "max_steps": 4,
+  "safety": {
+    "require_confirm_over_amount": null,
+    "forbid_tools": ["u9_push_bill", "u9_push_and_audit"]
+  },
+  "mock_trajectory": {
+    "tool_calls": [
+      {"name": "u9_query_sale_orders", "arguments": {"filter_string": "FBillNo='SO-2026-002'", "field_keys": "FBillNo,FPushedQty,FQty"}, "result": "{\"count\": 1, \"data\": [{\"FPushedQty\": 100, \"FQty\": 100}]}"}
+    ],
+    "final_text": "销售订单 SO-2026-002 的数量 100 已全部下推（已下推 100），无可下推数量，已停止操作。如需重新下推请先反审核下游单据。"
+  },
+  "mock_state": {
+    "SAL_DELIVERYNOTICE": [
+      {"FID": 3002, "FBillNo": "DN-2026-002", "FSrcBillNo": "SO-2026-002"}
+    ],
+    "SAL_SaleOrder": [
+      {"FID": 4002, "FBillNo": "SO-2026-002", "FPushedQty": 100, "FQty": 100}
+    ]
+  }
+}

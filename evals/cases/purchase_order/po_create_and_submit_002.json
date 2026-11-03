@@ -1,0 +1,39 @@
+{
+  "id": "po_create_and_submit_002",
+  "category": "采购订单",
+  "tags": ["高频", "创建", "提交"],
+  "input": "给供应商A建一张采购订单（物料螺丝，数量200，单号 PO-EVAL-002）并提交审批",
+  "setup": {
+    "description": "确保供应商A、物料螺丝存在",
+    "fixtures": ["supplier_A", "material_luosi"]
+  },
+  "expected_result": {
+    "assertions": [
+      {
+        "desc": "采购订单 PO-EVAL-002 已提交（待审核），数量正确",
+        "form_id": "PUR_PurchaseOrder",
+        "filter_string": "FBillNo='PO-EVAL-002'",
+        "exact_count": 1,
+        "field_checks": {
+          "FDocumentStatus": "B",
+          "FQty": 200
+        }
+      }
+    ]
+  },
+  "expected_tools": ["u9_save_bill", "u9_submit_bills"],
+  "max_steps": 6,
+  "safety": {"require_confirm_over_amount": null},
+  "mock_trajectory": {
+    "tool_calls": [
+      {"name": "u9_save_bill", "arguments": {"form_id": "PUR_PurchaseOrder", "model": {"FBillNo": "PO-EVAL-002"}}, "result": "{\"success\": true, \"fid\": \"2002\", \"next_action\": \"submit\"}"},
+      {"name": "u9_submit_bills", "arguments": {"form_id": "PUR_PurchaseOrder", "bill_ids": ["2002"]}, "result": "{\"success\": true, \"next_action\": \"audit\"}"}
+    ],
+    "final_text": "采购订单 PO-EVAL-002 已创建并提交，等待审核。"
+  },
+  "mock_state": {
+    "PUR_PurchaseOrder": [
+      {"FID": 2002, "FBillNo": "PO-EVAL-002", "FDocumentStatus": "B", "FQty": 200}
+    ]
+  }
+}

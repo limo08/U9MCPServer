@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "u9-mcp"
+version = "0.0.9"
+description = "MCP Server for U9 - Works with any MCP-compatible AI client"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Limo", email = "limo@utechai.com" }
+]
+keywords = ["mcp", "u9", "erp", "ai", "claude", "cursor", "windsurf", "cline"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial :: Accounting",
+]
+dependencies = [
+    "mcp[cli]>=2.0.0,<3.0.0",  # 2.x: FastMCP 已重命名为 mcp.server.mcpserver.MCPServer
+    "httpx>=0.27.0",
+    "pydantic>=2.0.0",
+    "pyodbc>=5.0.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pyyaml>=6.0",  # tests/test_evals.py → evals/config.py
+]
+
+[project.urls]
+Homepage = "https://github.com/limo08/U9MCPServer"
+Repository = "https://github.com/limo08/U9MCPServer"
+Documentation = "https://github.com/limo08/U9MCPServer#readme"
+
+[project.scripts]
+u9-mcp = "u9_mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/u9_mcp"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "e2e: 真实用友环境的端到端测试（需 U9_API_* 环境变量）",
+]

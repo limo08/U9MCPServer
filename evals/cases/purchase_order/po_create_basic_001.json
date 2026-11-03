@@ -1,0 +1,41 @@
+{
+  "id": "po_create_basic_001",
+  "category": "采购订单",
+  "tags": ["高频", "创建"],
+  "input": "给供应商A创建一张采购订单，物料螺丝，数量1000，单号用 PO-EVAL-001",
+  "setup": {
+    "description": "确保供应商A、物料螺丝存在；清理同条件已有单据",
+    "fixtures": ["supplier_A", "material_luosi"]
+  },
+  "expected_result": {
+    "assertions": [
+      {
+        "desc": "采购订单 PO-EVAL-001 已创建为草稿，供应商与数量正确",
+        "form_id": "PUR_PurchaseOrder",
+        "filter_string": "FBillNo='PO-EVAL-001'",
+        "exact_count": 1,
+        "field_checks": {
+          "FDocumentStatus": "A",
+          "FSupplierId.FNumber": "A",
+          "FQty": 1000
+        }
+      }
+    ]
+  },
+  "expected_tools": ["u9_query_partners", "u9_query_materials", "u9_save_bill"],
+  "max_steps": 6,
+  "safety": {"require_confirm_over_amount": null},
+  "mock_trajectory": {
+    "tool_calls": [
+      {"name": "u9_query_partners", "arguments": {"partner_type": "BD_Supplier", "filter_string": "FNumber='A'"}, "result": "{\"count\": 1}"},
+      {"name": "u9_query_materials", "arguments": {"filter_string": "FName like '%螺丝%'"}, "result": "{\"count\": 1}"},
+      {"name": "u9_save_bill", "arguments": {"form_id": "PUR_PurchaseOrder", "model": {"FBillNo": "PO-EVAL-001"}}, "result": "{\"success\": true, \"bill_no\": \"PO-EVAL-001\", \"next_action\": \"submit\"}"}
+    ],
+    "final_text": "已创建采购订单 PO-EVAL-001（草稿）：供应商A，物料 不锈钢螺丝，数量 1000。"
+  },
+  "mock_state": {
+    "PUR_PurchaseOrder": [
+      {"FID": 2001, "FBillNo": "PO-EVAL-001", "FDocumentStatus": "A", "FSupplierId.FNumber": "A", "FQty": 1000}
+    ]
+  }
+}

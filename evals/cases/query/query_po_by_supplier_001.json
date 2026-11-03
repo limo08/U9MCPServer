@@ -1,0 +1,41 @@
+{
+  "id": "query_po_by_supplier_001",
+  "category": "查询",
+  "tags": ["高频", "查询", "采购"],
+  "input": "查供应商A最近的已审核采购订单，告诉我有几张、单号分别是什么",
+  "setup": {
+    "description": "确保供应商A存在",
+    "fixtures": ["supplier_A"]
+  },
+  "expected_result": {
+    "assertions": [
+      {
+        "desc": "查到供应商A的已审核采购订单至少1张",
+        "form_id": "PUR_PurchaseOrder",
+        "filter_string": "FSupplierId.FNumber='A' and FDocumentStatus='C'",
+        "min_count": 1
+      }
+    ]
+  },
+  "expected_tools": ["u9_query_purchase_orders"],
+  "max_steps": 3,
+  "safety": {
+    "require_confirm_over_amount": null
+  },
+  "mock_trajectory": {
+    "tool_calls": [
+      {
+        "name": "u9_query_purchase_orders",
+        "arguments": {"filter_string": "FSupplierId.FNumber='A' and FDocumentStatus='C'"},
+        "result": "{\"count\": 2, \"data\": [\"PO-2026-001\", \"PO-2026-002\"]}"
+      }
+    ],
+    "final_text": "供应商A 共有 2 张已审核采购订单：PO-2026-001、PO-2026-002。"
+  },
+  "mock_state": {
+    "PUR_PurchaseOrder": [
+      {"FID": 1001, "FBillNo": "PO-2026-001", "FSupplierId.FNumber": "A", "FDocumentStatus": "C"},
+      {"FID": 1002, "FBillNo": "PO-2026-002", "FSupplierId.FNumber": "A", "FDocumentStatus": "C"}
+    ]
+  }
+}

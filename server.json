@@ -1,0 +1,80 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.limo08/u9-mcp",
+  "title": "U9 ERP",
+  "description": "Third-party MCP server for YONGYOU U9C ERP (OpenAPI) - 107 tools, 17 domains. Unofficial.",
+  "version": "0.0.9",
+  "repository": {
+    "url": "https://github.com/limo08/U9MCPServer",
+    "source": "github"
+  },
+  "websiteUrl": "https://github.com/limo08/U9MCPServer/",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "u9-mcp",
+      "version": "0.0.9",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "U9_API_SERVER_URL",
+          "description": "U9C server base URL, e.g. https://u9.example.com:8080 (do not append /webapi)",
+          "isRequired": true,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "U9_API_CLIENT_ID",
+          "description": "U9C OAuth2 client ID",
+          "isRequired": true,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "U9_API_CLIENT_SECRET",
+          "description": "U9C OAuth2 client secret",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "U9_API_ENT_CODE",
+          "description": "U9C enterprise/account set code (entCode)",
+          "isRequired": true,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "U9_API_ORG_CODE",
+          "description": "U9C organization code (orgCode)",
+          "isRequired": true,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "U9_API_USERNAME",
+          "description": "U9C user code (userCode)",
+          "isRequired": true,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "U9_API_TOKEN",
+          "description": "Optional pre-issued U9C token; normally leave empty and use OAuth2",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "U9_API_LANGUAGE",
+          "description": "Language, default zh-CN",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}
