@@ -1,6 +1,6 @@
 # 用友 U9C OpenAPI 接口说明（本项目对接版）
 
-> 数据来源：<https://openapi.yyu9c.com/doc.html#/home>
+> 数据来源：<https://openapi.yyu9c.com/doc.html>
 > 本地规范快照：`src/u9_mcp/data/u9c_openapi.json`（OpenAPI 3.0.1，`title=U9C OPENAPI`，`version=v1`）。
 >
 > 规范规模：**628 个 Path、157 个 Service/Tag、838 个 Schema**。

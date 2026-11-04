@@ -22,7 +22,7 @@
 
 ## 1. 采集事实与来源
 
-- **抓取源**：`https://openapi.open.u9.com/ApiDoc`
+- **抓取源**：`https://openapi.yyu9c.com/doc.html`
 - **抓取方式**：经 Kimi WebBridge 带登录态（session 有效）读取左侧 `el-tree` 的 Vue 实例 `store.root` 全量数据。
 - **真实结构（全量，非估算）**：
 

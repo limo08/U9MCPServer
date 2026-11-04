@@ -211,7 +211,7 @@ Business scenario examples showing how to use each tool. See `examples/README.md
    - 确认 form_id 和字段是否正确
 
 3. **查阅官方 API 文档**
-   - 使用 MCP 浏览器访问 https://openapi.open.u9.com/ApiDoc
+   - 使用 MCP 浏览器访问 https://openapi.yyu9c.com/doc.html
    - 搜索对应业务领域的单据类型
    - 查看请求参数、响应格式、代码示例
 

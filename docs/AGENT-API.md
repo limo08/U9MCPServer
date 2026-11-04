@@ -1,7 +1,7 @@
 # 用友 U9C MCP Server — Agent 接口调用文档
 
 > 面向 AI Agent（Claude、Cursor、WorkBuddy 等）。底层协议为 **U9C OpenAPI**
-> （`https://openapi.yyu9c.com/doc.html#/home`），由 MCPServer（mcp 2.x）暴露
+> （`https://openapi.yyu9c.com/doc.html`），由 MCPServer（mcp 2.x）暴露
 > **107 个工具 / 17 个业务域**。本文中的 `form_id` 会由服务自动解析为 U9C
 > `Service` 与实体全名（如 `PUR_PurchaseOrder` → `PurchaseOrder` →
 > `UFIDA.U9.PM.PO.PurchaseOrder`）。

@@ -9,7 +9,7 @@ Team 型（多角色协作团队）
 
 ## 核心能力
 
-- 将 `https://openapi.open.u9.com/ApiDoc` 的 **16 业务领域 / 77 模块 / 标准 WebAPI 动作集** 集成进 `u9-mcp`。
+- 将 `https://openapi.yyu9c.com/doc.html` 的 **16 业务领域 / 77 模块 / 标准 WebAPI 动作集** 集成进 `u9-mcp`。
 - 基于真实 U9C 环境（配置 `U9_API_SERVER_URL` 与 OAuth2 五参数）做字段探查与本地联调。
 - 规避本环境二开坑：`SAL_SaleOrder` 二开版、`FCUSTID` 全大写客户字段、`TRNV_Receipt` / `TRNV_PaymentSlip` 二开收付款单、`BD_Material` 的 `FBaseUnitId`。
 - 复用提速工具：`u9_validate_bill`、`u9_get_bill_template`、`u9_refresh_metadata`。

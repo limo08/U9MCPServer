@@ -1,6 +1,6 @@
 # 用友 ApiDoc 1076 业务对象清单（2026-08-07 抓取）
 
-> 来源：https://openapi.open.u9.com/ApiDoc ｜ 抓取日：2026-08-07
+> 来源：https://openapi.yyu9c.com/doc.html ｜ 抓取日：2026-08-07
 > 结构：16 业务领域 → 69 模块 → **1076 业务对象** → 7881 操作（每操作带 apiinfo/detail/{id}）
 
 ## 员工服务（8 对象）

@@ -1,1 +1,1 @@
-https://openapi.yyu9c.com/doc.html#/home
+https://openapi.yyu9c.com/doc.html

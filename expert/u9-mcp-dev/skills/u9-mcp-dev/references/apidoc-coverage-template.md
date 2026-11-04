@@ -1,6 +1,6 @@
 # ApiDoc 覆盖进度跟踪模板
 
-> 配合 `bin/kmcp coverage` 使用。目标：把 `https://openapi.open.u9.com/ApiDoc` 的 **16 业务领域 / 77 模块 / 标准动作集** 全部覆盖进 u9-mcp。
+> 配合 `bin/kmcp coverage` 使用。目标：把 `https://openapi.yyu9c.com/doc.html` 的 **16 业务领域 / 77 模块 / 标准动作集** 全部覆盖进 u9-mcp。
 
 ## 字段说明
 - **领域 / 模块**：来自 `references/api-inventory-raw.json`（已全量抓取 16 领域 + 77 模块）。

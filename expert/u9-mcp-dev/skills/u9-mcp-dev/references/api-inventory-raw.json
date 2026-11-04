@@ -1,5 +1,5 @@
 {
- "source": "https://openapi.open.u9.com/ApiDoc",
+ "source": "https://openapi.yyu9c.com/doc.html",
  "captured_at": "2026-08-07",
  "note": "2026-08-07 经 Kimi WebBridge 带登录态实时抓取 ApiDoc 左侧 el-tree 的 Vue 实例(store.root)全量数据：16 业务领域 → 69 模块 → 1076 个业务对象 → 7881 个操作(每个操作带 apiinfo/detail/{id} 的 id)。操作即用友标准 WebAPI 动作集：查看(770)/保存(701)/单据查询(628)/删除(623)/批量保存(596)/提交(576)/审核(574)/暂存(534)/反审核(513)/撤销(461)/禁用(279)/反禁用(277)/查询报表数据(228)/下推(162)/作废(130)/反作废(77)，及整单关闭/反关闭/归档/确认/冻结/分配等。这些动作由 11 个 FormId 参数化通用工具(u9_save_bill/submit_bills/audit_bills/unaudit_bills/view_bill/delete_bills/push_bill/query_bills/validate_bill/create_and_audit/push_and_audit)统一覆盖——传入任意 FormId 即可对任意业务对象执行对应标准动作。标准动作15个已覆盖10个(删除/暂存/保存/查看/提交/审核/反审核/下推/批量保存/单据查询)，未覆盖5个：撤销/作废/整单关闭/反关闭(+反作废/整单反关闭)。",
  "domains": [
