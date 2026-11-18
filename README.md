@@ -58,7 +58,7 @@ AI 会自动调用用友 API 完成操作，无需手动登录 ERP 界面。
 
 ## 功能特性
 
-- **107 个工具**：覆盖生产、成本、资产、审计、采购、销售、库存、单据附件、财务、委外加工、财务报表等 17 大业务域
+- **107 个工具**：覆盖生产、成本、资产、审计、采购、销售、库存、单据附件、财务、委外加工、财务报表等 17 大业务域；支持按业务域拆成 13 个可独立部署的 MCP 服务
 - **元数据动态查询**：`get_bill_template` / `validate_bill` / `refresh_metadata`，元数据本地缓存
 - **6 个 U9 库表/数据工具**：搜索表、搜索字段、查看表结构、form_id 元数据候选发现，以及只读直查表数据（`u9_query_table`）和执行单条只读 SQL（`u9_execute_sql`）；已按 `u9_schema.json` 校正 U9 真实表名，未配置 SQL Server 时结构探查自动回退到数据字典
 - **自然语言操作**：用中文直接描述需求，AI 自动转换为 API 调用
@@ -177,6 +177,7 @@ chmod +x start.sh
 
 ```bash
 ./start.sh --port 9000
+./start.sh --service u9-bill --port 8011
 ./start.sh run --transport sse --host 0.0.0.0 --port 8000
 ./start.sh --transport stdio          # 给本地 MCP 客户端当子进程用
 ```
@@ -279,6 +280,7 @@ WantedBy=multi-user.target
 | `MCP_SQLSERVER_USER` | SQL Server 用户（建议只读账号） | `sa` |
 | `MCP_SQLSERVER_PASSWORD` | SQL Server 密码 | `xxxx` |
 | `U9_SCHEMA_FILE` | U9 数据字典 JSON 路径（可选；未配置 SQL Server 时用于表结构探查回退） | `./data/u9_schema.json` |
+| `U9_MCP_SERVICE` | 按业务域启动的服务：`all`、单个服务 ID 或逗号组合（可选，默认 `all`） | `u9-bill` |
 | `U9_MCP_LOG_FILE` | `start.sh` 运行日志路径（可选；相对路径基于项目根目录，支持绝对路径） | `/var/log/u9-mcp/server.log` |
 | `U9_MCP_PID_FILE` | `start.sh` PID 文件路径（可选） | `/run/u9-mcp.pid` |
 | `U9_MCP_STATE_FILE` | `start.sh` 运行状态文件路径（可选） | `/run/u9-mcp.state` |
@@ -289,7 +291,7 @@ WantedBy=multi-user.target
 
 ## 可用工具列表
 
-共 **107 个工具**，按业务域分组（每组列出代表性工具，完整清单见 `src/u9_mcp/api/`）：
+共 **107 个工具**，按业务域分组（每组列出代表性工具，完整清单见 `src/u9_mcp/api/`）。需要独立部署时，可按业务域拆成 13 个 MCP 服务，见下方[「按业务域拆分部署」](#按业务域拆分部署13-个-mcp-服务)。
 
 | 业务域 | 数量 | 代表性工具 |
 |--------|------|-----------|
@@ -389,6 +391,213 @@ U9C 没有分块/FileId 续传协议，也不支持该接口的分录级附件�
 | `u9_execute_sql` | 执行单条只读 SQL（SELECT/WITH），内置 DML/DDL/多语句拦截 |
 
 **典型用法**：先问 AI "采购订单在数据库里对应哪张表"，再用 `u9_describe_table` 看字段结构，最后用 `u9_query_table` 按条件读取数据。数据库直连工具均为只读，写入仍应走 WebAPI 以保证业务规则生效。
+
+
+## 按业务域拆分部署（13 个 MCP 服务）
+
+工具已按业务域拆成 13 个可独立部署的服务。每个服务只注册自己业务域的工具，启动时通过 `--service` 或 `U9_MCP_SERVICE` 选择：
+
+- 单服务：`--service u9-bill`
+- 多服务组合：`--service u9-bill,u9-purchase`
+- 全部工具：`--service all`（默认，兼容旧用法，共 107 个）
+
+服务目录的唯一事实来源是 [`src/u9_mcp/config/service_catalog.py`](./src/u9_mcp/config/service_catalog.py)。
+
+### 服务目录
+
+| 服务 ID | 业务域 | 工具数 | 只读/写 | 默认端口 |
+|---|---|---:|---:|---:|
+| `u9-bill` | 通用单据 | 18 | 3 / 15 | 8011 |
+| `u9-audit-workflow` | 审计与审批 | 10 | 7 / 3 | 8012 |
+| `u9-production` | 生产制造 | 12 | 7 / 5 | 8013 |
+| `u9-cost` | 成本核算 | 12 | 11 / 1 | 8014 |
+| `u9-asset` | 固定资产 | 6 | 5 / 1 | 8015 |
+| `u9-inventory` | 库存 | 9 | 8 / 1 | 8016 |
+| `u9-purchase` | 采购 | 5 | 5 / 0 | 8017 |
+| `u9-sales` | 销售 | 4 | 4 / 0 | 8018 |
+| `u9-outsource-receipt` | 委外/收款 | 2 | 2 / 0 | 8019 |
+| `u9-master-data` | 基础数据 | 8 | 8 / 0 | 8020 |
+| `u9-system` | 系统/其他 | 5 | 4 / 1 | 8021 |
+| `u9-metadata` | 元数据/开发 | 11 | 11 / 0 | 8022 |
+| `u9-reporting` | 统计/报表/附件 | 5 | 4 / 1 | 8023 |
+| 合计 | 13 个服务 | 107 | 79 / 28 | - |
+
+查看服务目录和某个服务实际包含的工具：
+
+```bash
+u9-mcp --list-services
+u9-mcp --list-roles
+u9-mcp --service u9-bill --list-tools
+```
+
+### 单服务部署
+
+以通用单据服务 `u9-bill` 为例，`.env` 中增加：
+
+```ini
+U9_MCP_SERVICE=u9-bill
+U9_MCP_TRANSPORT=streamable-http
+U9_MCP_HOST=0.0.0.0
+U9_MCP_PORT=8011
+
+# 多服务并行时建议显式区分 PID / 状态 / 日志文件；
+# 不写时 start.sh 也会按服务名自动生成默认文件名。
+U9_MCP_PID_FILE=.u9-mcp-u9-bill.pid
+U9_MCP_STATE_FILE=.u9-mcp-u9-bill.state
+U9_MCP_LOG_FILE=logs/u9-mcp-u9-bill.log
+```
+
+启动、查看状态和停止：
+
+```bash
+./start.sh --service u9-bill --port 8011
+./start.sh status --service u9-bill
+./start.sh logs --service u9-bill
+./start.sh stop --service u9-bill
+```
+
+前台运行（systemd / supervisor / Docker 用）：
+
+```bash
+./start.sh run --service u9-bill --port 8011
+```
+
+本地 stdio 客户端直接调用：
+
+```bash
+u9-mcp --service u9-bill
+```
+
+MCP 客户端配置示例（Streamable HTTP）：
+
+```json
+{
+  "mcpServers": {
+    "u9-bill": {
+      "url": "http://<服务器IP>:8011/mcp"
+    }
+  }
+}
+```
+
+> `U9_API_SERVER_URL`、`U9_API_CLIENT_ID` 等用友认证变量仍按原方式配置，所有服务共用一套。SQL Server 配置只有 `u9-metadata` 需要。
+
+Docker 单服务启动：
+
+```bash
+docker run -d --name u9-bill \
+  -p 8011:8011 \
+  --env-file .env \
+  -e U9_MCP_SERVICE=u9-bill \
+  -e U9_MCP_PORT=8011 \
+  ghcr.io/limo/u9mcp:latest
+```
+
+### 按角色组合部署
+
+角色组合是“启动时选择多个业务域”，不是代码合并。既可以一个进程组合多个服务，也可以每个业务域独立起进程、客户端分别连接。
+
+| 角色 | 建议服务组合 | 工具总数 | 建议端口 |
+|---|---|---:|---:|
+| 供应链专员 | `u9-bill` + `u9-purchase` + `u9-sales` + `u9-inventory` + `u9-outsource-receipt` + `u9-master-data` | 46 | 8030 |
+| 生产/成本会计 | `u9-production` + `u9-cost` + `u9-asset` + `u9-master-data` | 38 | 8031 |
+| 财务/审计 | `u9-cost` + `u9-asset` + `u9-audit-workflow` + `u9-master-data` | 36 | 8032 |
+| 管理层/综合 | `u9-bill` + `u9-audit-workflow` + `u9-master-data` + `u9-reporting` | 41 | 8033 |
+| 开发/实施 | `u9-metadata` + `u9-system` + `u9-master-data` | 24 | 8034 |
+
+#### 方式一：一个进程组合多个业务域（最简单）
+
+以供应链专员为例：
+
+```ini
+U9_MCP_SERVICE=u9-bill,u9-purchase,u9-sales,u9-inventory,u9-outsource-receipt,u9-master-data
+U9_MCP_TRANSPORT=streamable-http
+U9_MCP_HOST=0.0.0.0
+U9_MCP_PORT=8030
+U9_MCP_PID_FILE=.u9-mcp-supply.pid
+U9_MCP_STATE_FILE=.u9-mcp-supply.state
+U9_MCP_LOG_FILE=logs/u9-mcp-supply.log
+```
+
+```bash
+./start.sh --service u9-bill,u9-purchase,u9-sales,u9-inventory,u9-outsource-receipt,u9-master-data --port 8030
+```
+
+客户端只连一个端点：
+
+```json
+{
+  "mcpServers": {
+    "u9-supply": {
+      "url": "http://<服务器IP>:8030/mcp"
+    }
+  }
+}
+```
+
+Docker 组合启动：
+
+```bash
+docker run -d --name u9-supply \
+  -p 8030:8030 \
+  --env-file .env \
+  -e U9_MCP_SERVICE=u9-bill,u9-purchase,u9-sales,u9-inventory,u9-outsource-receipt,u9-master-data \
+  -e U9_MCP_PORT=8030 \
+  ghcr.io/limo/u9mcp:latest
+```
+
+其他角色同理：
+
+```bash
+# 生产/成本会计（38 个工具）
+./start.sh --service u9-production,u9-cost,u9-asset,u9-master-data --port 8031
+
+# 财务/审计（36 个工具）
+./start.sh --service u9-cost,u9-asset,u9-audit-workflow,u9-master-data --port 8032
+
+# 管理层/综合（41 个工具）
+./start.sh --service u9-bill,u9-audit-workflow,u9-master-data,u9-reporting --port 8033
+
+# 开发/实施（24 个工具）
+./start.sh --service u9-metadata,u9-system,u9-master-data --port 8034
+```
+
+#### 方式二：每个业务域独立进程，客户端组合连接
+
+适合需要独立扩缩容、独立升级或独立授权的场景。例如供应链角色：
+
+```bash
+./start.sh --service u9-bill --port 8011
+./start.sh --service u9-purchase --port 8017
+./start.sh --service u9-sales --port 8018
+./start.sh --service u9-inventory --port 8016
+./start.sh --service u9-outsource-receipt --port 8019
+./start.sh --service u9-master-data --port 8020
+```
+
+MCP 客户端配置：
+
+```json
+{
+  "mcpServers": {
+    "u9-bill":            { "url": "http://<服务器IP>:8011/mcp" },
+    "u9-purchase":        { "url": "http://<服务器IP>:8017/mcp" },
+    "u9-sales":           { "url": "http://<服务器IP>:8018/mcp" },
+    "u9-inventory":       { "url": "http://<服务器IP>:8016/mcp" },
+    "u9-outsource":       { "url": "http://<服务器IP>:8019/mcp" },
+    "u9-master-data":     { "url": "http://<服务器IP>:8020/mcp" }
+  }
+}
+```
+
+> 客户端会把所有连接服务的工具合并计数。供应链组合共 46 个，仍在 50 以内；不要在同一个 Agent 中同时连接全部 13 个服务，否则总工具数仍会超过 50。确实需要“超级 Agent”时，建议按角色拆 Agent，或后续使用 MCP 网关做动态工具下发。
+
+### 安全边界
+
+- `u9-metadata` 包含数据库结构探查和只读 SQL，建议只给开发/实施角色；SQL 工具仍受只读守卫限制。
+- `u9-system` 包含 `u9_execute_operation` 通用写操作，建议只给管理员角色。
+- 所有新增/修改仍必须走 U9C API；数据库直连工具只读，不能用于写业务表。
+- `u9-bill`、`u9-production`、`u9-cost`、`u9-asset`、`u9-inventory`、`u9-audit-workflow`、`u9-reporting` 中的写工具需要对应 U9 账号权限。
 
 ## 支持的单据类型（form_id）
 

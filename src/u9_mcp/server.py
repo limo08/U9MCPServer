@@ -12,7 +12,12 @@
 
 import httpx
 
-from .api import mcp
+from .api import apply_service_filter, mcp, selected_tool_names
+from .config.service_catalog import (
+    format_role_table,
+    format_service_table,
+    normalize_service_selection,
+)
 from .api.attachment import u9_upload_attachment as u9_upload_attachment
 from .api.attachment import u9_download_attachment as u9_download_attachment
 
@@ -484,8 +489,12 @@ def main():
       u9-mcp --check                      # 检查配置：U9 登录 或 SQL Server 直连，至少一种可用
       u9-mcp --transport sse              # SSE 远程模式，监听 http://host:port/sse
       u9-mcp --transport streamable-http  # Streamable HTTP 远程模式，监听 http://host:port/mcp
+      u9-mcp --list-services              # 查看业务域服务目录
+      u9-mcp --service u9-bill            # 只注册通用单据服务
+      u9-mcp --service u9-bill,u9-purchase  # 组合多个业务域
+      u9-mcp --service all                # 注册全部 107 个工具（默认，兼容旧用法）
     远程模式可用 --host / --port 指定监听地址（默认 127.0.0.1:8000）。
-    也支持环境变量 U9_MCP_TRANSPORT / U9_MCP_HOST / U9_MCP_PORT。
+    也支持环境变量 U9_MCP_TRANSPORT / U9_MCP_HOST / U9_MCP_PORT / U9_MCP_SERVICE。
     """
     import sys
     import argparse
@@ -514,14 +523,78 @@ def main():
         default=int(_env("MCP_PORT", "8000")),
         help="sse / streamable-http 监听端口 (默认 8000)",
     )
+    parser.add_argument(
+        "--service",
+        default=_env("MCP_SERVICE", "all"),
+        help="业务域服务：all、单个服务 ID，或逗号分隔的多个服务 ID",
+    )
+    parser.add_argument(
+        "--list-services",
+        action="store_true",
+        help="列出按业务域拆分的服务目录后退出",
+    )
+    parser.add_argument(
+        "--list-tools",
+        action="store_true",
+        help="列出当前 --service 选中的工具后退出",
+    )
+    parser.add_argument(
+        "--list-roles",
+        action="store_true",
+        help="列出供应链、生产、财务、管理层、开发等角色组合后退出",
+    )
     args = parser.parse_args()
 
-    _run_server(transport=args.transport, host=args.host, port=args.port)
+    try:
+        normalize_service_selection(args.service)
+    except ValueError as exc:
+        parser.error(str(exc))
+
+    if args.list_services:
+        print(format_service_table())
+        return
+
+    if args.list_roles:
+        print(format_role_table())
+        return
+
+    if args.list_tools:
+        names = sorted(selected_tool_names(args.service))
+        for name in names:
+            print(name)
+        print(f"# service={args.service} tools={len(names)}", file=sys.stderr)
+        return
+
+    _run_server(
+        transport=args.transport,
+        host=args.host,
+        port=args.port,
+        service=args.service,
+    )
 
 
 
-def _run_server(transport: str, host: str = "127.0.0.1", port: int = 8000) -> None:
+def _run_server(
+    transport: str,
+    host: str = "127.0.0.1",
+    port: int = 8000,
+    service: str = "all",
+) -> None:
     """启动 MCP Server（mcp 2.x 的 run() 直接接收 host/port）。"""
+    import sys
+
+    try:
+        names = apply_service_filter(service)
+    except (ValueError, RuntimeError) as exc:
+        print(f"[ERROR] {exc}", file=sys.stderr)
+        raise SystemExit(2) from exc
+
+    if service and service != "all":
+        print(
+            f"[INFO] 业务域服务：{service}（已注册 {len(names)} 个工具）",
+            file=sys.stderr,
+        )
+
     if transport == "stdio":
         mcp.run(transport="stdio")
     else:

@@ -15,12 +15,13 @@
 #   --transport stdio|sse|streamable-http   （默认 streamable-http）
 #   --host 0.0.0.0                          （默认 0.0.0.0）
 #   --port 8000                             （默认 8000）
+#   --service u9-bill                       （默认 all；可逗号组合多个业务域）
 #   --no-install                             缺少依赖时不自动安装
 #
 # 用友接口变量：U9_API_SERVER_URL / U9_API_CLIENT_ID / U9_API_CLIENT_SECRET /
 #               U9_API_ENT_CODE / U9_API_ORG_CODE / U9_API_USERNAME
 #               （或直接提供 U9_API_TOKEN）
-# 运行变量：U9_MCP_TRANSPORT / U9_MCP_HOST / U9_MCP_PORT /
+# 运行变量：U9_MCP_TRANSPORT / U9_MCP_HOST / U9_MCP_PORT / U9_MCP_SERVICE /
 #           U9_MCP_LOG_FILE / U9_MCP_PID_FILE / U9_MCP_STATE_FILE /
 #           U9_MCP_AUTO_INSTALL / MCP_USAGE_LOG
 # =============================================================================
@@ -47,9 +48,7 @@ fi
 TRANSPORT="${U9_MCP_TRANSPORT:-streamable-http}"
 HOST="${U9_MCP_HOST:-0.0.0.0}"
 PORT="${U9_MCP_PORT:-8000}"
-PID_FILE="${U9_MCP_PID_FILE:-$BASE_DIR/.u9-mcp.pid}"
-STATE_FILE="${U9_MCP_STATE_FILE:-$BASE_DIR/.u9-mcp.state}"
-LOG_FILE="${U9_MCP_LOG_FILE:-$BASE_DIR/logs/u9-mcp.log}"
+SERVICE="${U9_MCP_SERVICE:-all}"
 AUTO_INSTALL="${U9_MCP_AUTO_INSTALL:-1}"
 
 COMMAND="start"
@@ -87,6 +86,8 @@ usage() {
 示例：
   ./start.sh
   ./start.sh --port 9000
+  ./start.sh --service u9-bill --port 8011
+  ./start.sh --service u9-bill,u9-purchase --port 8020
   ./start.sh run --transport sse --host 0.0.0.0 --port 8000
 
 端点：
@@ -105,6 +106,8 @@ while [[ $# -gt 0 ]]; do
         --host=*)         HOST="${1#*=}"; shift ;;
         -p|--port)        PORT="${2:?--port 需要参数}"; shift 2 ;;
         --port=*)         PORT="${1#*=}"; shift ;;
+        --service)        SERVICE="${2:?--service 需要参数}"; shift 2 ;;
+        --service=*)      SERVICE="${1#*=}"; shift ;;
         --foreground|-f)  COMMAND="run"; shift ;;
         --no-install)     AUTO_INSTALL=0; shift ;;
         -h|--help)        usage ;;
@@ -117,10 +120,29 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+SERVICE="${SERVICE:-all}"
+
 case "$TRANSPORT" in
     stdio|sse|streamable-http) ;;
     *) die "无效的 transport：$TRANSPORT（可选：stdio / sse / streamable-http）" ;;
 esac
+
+# 多服务并行部署时，默认 PID/状态/日志文件按服务名区分，避免互相覆盖；
+# 显式设置 U9_MCP_PID_FILE / U9_MCP_STATE_FILE / U9_MCP_LOG_FILE 时以显式值为准。
+resolve_runtime_paths() {
+    local slug="${SERVICE//,/-}"
+    slug="${slug//[^A-Za-z0-9_.-]/_}"
+    if [[ "$SERVICE" == "all" ]]; then
+        PID_FILE="${U9_MCP_PID_FILE:-$BASE_DIR/.u9-mcp.pid}"
+        STATE_FILE="${U9_MCP_STATE_FILE:-$BASE_DIR/.u9-mcp.state}"
+        LOG_FILE="${U9_MCP_LOG_FILE:-$BASE_DIR/logs/u9-mcp.log}"
+    else
+        PID_FILE="${U9_MCP_PID_FILE:-$BASE_DIR/.u9-mcp-$slug.pid}"
+        STATE_FILE="${U9_MCP_STATE_FILE:-$BASE_DIR/.u9-mcp-$slug.state}"
+        LOG_FILE="${U9_MCP_LOG_FILE:-$BASE_DIR/logs/u9-mcp-$slug.log}"
+    fi
+}
+resolve_runtime_paths
 
 # ── 选择 Python 解释器 ──────────────────────────────────────────────────────
 pick_python() {
@@ -195,6 +217,7 @@ write_state() {
         printf 'TRANSPORT=%q\n' "$TRANSPORT"
         printf 'HOST=%q\n' "$HOST"
         printf 'PORT=%q\n' "$PORT"
+        printf 'SERVICE=%q\n' "$SERVICE"
     } > "$STATE_FILE"
 }
 
@@ -254,6 +277,7 @@ upstream_hint() {
 }
 
 print_endpoints() {
+    info "业务域服务：$SERVICE"
     if [[ "$TRANSPORT" == "stdio" ]]; then
         info "MCP 传输：stdio（由 MCP 客户端作为子进程调用）"
     else
@@ -281,9 +305,10 @@ start_foreground() {
         port_conflict_message
     fi
     export_pythonpath
-    info "前台启动 $APP_NAME（transport=$TRANSPORT, host=$HOST, port=$PORT）"
+    info "前台启动 $APP_NAME（service=$SERVICE, transport=$TRANSPORT, host=$HOST, port=$PORT）"
     print_endpoints
-    exec "$PYTHON_BIN" -m u9_mcp.server --transport "$TRANSPORT" --host "$HOST" --port "$PORT"
+    exec "$PYTHON_BIN" -m u9_mcp.server \
+        --transport "$TRANSPORT" --host "$HOST" --port "$PORT" --service "$SERVICE"
 }
 
 start_background() {
@@ -315,9 +340,9 @@ start_background() {
     [[ -w "$state_dir" ]] || die "状态目录不可写：$state_dir（请检查 U9_MCP_STATE_FILE）"
     export_pythonpath
 
-    info "启动 $APP_NAME（transport=$TRANSPORT, host=$HOST, port=$PORT）"
+    info "启动 $APP_NAME（service=$SERVICE, transport=$TRANSPORT, host=$HOST, port=$PORT）"
     nohup "$PYTHON_BIN" -m u9_mcp.server \
-        --transport "$TRANSPORT" --host "$HOST" --port "$PORT" \
+        --transport "$TRANSPORT" --host "$HOST" --port "$PORT" --service "$SERVICE" \
         >>"$LOG_FILE" 2>&1 &
     pid=$!
     echo "$pid" > "$PID_FILE"
